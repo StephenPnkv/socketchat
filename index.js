@@ -12,9 +12,24 @@ app.get('/', (req,res) => {
   res.sendFile(__dirname + '/public/index.html');
 });
 
-io.on('connection', socket => {
+
+//Tech namespace
+const tech = io.of('/tech');
+tech.on('connection', socket => {
+
+  socket.on('join', data => {
+    socket.join(data.room);
+    tech.in(data.room).emit('message', `New user joined ${data.room}`);
+  });
+
   console.log('User has connected.');
-  socket.on('message', (msg) => {
-    console.log('Message: ' + msg)
-  })
-})
+
+  socket.on('message', (data) => {
+    console.log('Message: ' + data.msg );
+    tech.emit('message',data.msg);
+  });
+  socket.on('disconnect', () => {
+    console.log('User has disconnected.');
+    socket.emit('message', 'A user has disconnected.');
+  });
+});
